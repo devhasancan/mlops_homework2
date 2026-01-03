@@ -1,0 +1,72 @@
+name: MLOps CI/CD Pipeline
+
+# Trigger the pipeline on push or pull request events targeting the main branch
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout the repository content to the runner
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # 2. Set up Python 3.9 environment
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    # 3. Install project dependencies and testing tools
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # Installing dependencies required for app, testing, and linting
+        pip install pandas pytest pylint scikit-learn flask requests
+
+    # 4. Code Quality Analysis (Linting)
+    # Enforces coding standards. Fails if the score is below the threshold.
+    - name: Code Analysis (Linting)
+      run: |
+        echo "Running Pylint on source code..."
+        pylint src/ --fail-under=8.0
+
+    # 5. Automated Tests (Unit & Integration)
+    # Validates logic (src/features.py) and API integration (src/app.py)
+    - name: Run Unit and Integration Tests
+      run: |
+        echo "Running Test Suite..."
+        python -m pytest tests/
+
+    # --- CONTINUOUS DELIVERY / DEPLOYMENT STAGE ---
+
+    # 6. Build Docker Artifact
+    # Packages the application into a container image
+    - name: Build Docker Image
+      run: |
+        docker build -t mlops-app:latest .
+
+    # 7. Run Container (Simulation of Deployment)
+    # Starts the container in detached mode mapping port 5000
+    - name: Run Docker Container
+      run: |
+        docker run -d -p 5000:5000 --name mlops-container mlops-app:latest
+        echo "Waiting for service to start..."
+        sleep 10 
+
+    # 8. Smoke Testing (Post-Deployment Verification)
+    # Verifies system health and basic functionality on the running container
+    - name: Run Smoke Test
+      run: |
+        python smoke_test.py
+
+    # 9. Teardown
+    # Stops and removes the container to clean up resources
+    - name: Stop Container
+      if: always()
+      run: docker stop mlops-container
