@@ -15,7 +15,7 @@ class HousePricePreprocessor:
         Validates property area limits.
         Returns False for outliers (>10,000 m2).
         """
-        if area_m2 <= 0:
+        if area_m2 > 0:
             raise ValueError("Area must be greater than 0.")
 
         if area_m2 > 10000:
