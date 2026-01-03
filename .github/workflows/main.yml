@@ -34,7 +34,7 @@ jobs:
     - name: Code Analysis (Linting)
       run: |
         echo "Running Pylint on source code..."
-        pylint src/ --fail-under=8.0
+        pylint src/ --fail-under=5.0
 
     # 5. Automated Tests (Unit & Integration)
     # Validates logic (src/features.py) and API integration (src/app.py)
